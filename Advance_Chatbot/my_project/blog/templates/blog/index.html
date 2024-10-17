@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot App</title>
+
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'blog/styles.css' %}" /> 
+
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    
+    <style>
+        .userText {
+            text-align: right;
+            font-family: monospace; 
+            font-size: 14px;
+            line-height: 25px;
+            color: rgb(109, 111, 109);  
+        }
+    </style>
+
+    
+</head>
+<body>
+    <h1>Chatbot App</h1>
+    <div id="chatbot">
+        <p class="botText"><span>Hi there</span></p>
+    </div>
+    
+    <form id="userInput" method="post" action="{% url 'get_response' %}">
+        {% csrf_token %}
+        <input type="text" name="userMessage" id="textInput" placeholder="Type your message..." required />
+        <input type="submit" value="Send" id="buttonInput" />
+    </form>
+
+    <script>
+        $('#userInput').on('submit', function(event) {
+            event.preventDefault(); // Prevent the form from submitting the default way
+            getUserResponse(); 
+        });
+
+        function getUserResponse() {
+            var userText = $('#textInput').val(); 
+            var userHTML = "<p class='userText'>User: <span>" + userText + "</span></p>";
+            $('#textInput').val("");
+
+            $('#chatbot').append(userHTML);
+
+            // Use POST instead of GET for the chatbot response
+            $.post('{% url "get_response" %}', { userMessage: userText, csrfmiddlewaretoken: '{{ csrf_token }}' })
+                .done(function(data) {
+                    var returnedMessage = "<p class='botText'>Chatbot: <span>" + data + "</span></p>";
+                    $('#chatbot').append(returnedMessage);
+                    $('#chatbot').scrollTop($('#chatbot')[0].scrollHeight); // Scroll to the bottom of the chat
+                })
+                .fail(function() {
+                    var errorMessage = "<p class='botText'>Chatbot: <span>Error occurred. Please try again.</span></p>";
+                    $('#chatbot').append(errorMessage);
+                    $('#chatbot').scrollTop($('#chatbot')[0].scrollHeight); // Scroll to the bottom of the chat
+                });
+        }
+    </script>
+</body>
+</html>
